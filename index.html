@@ -1,0 +1,447 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="disabled-adaptations" content="watch">
+  <meta name="theme-color" content="#111318">
+  <meta name="description" content="FLIP. Black: swipe the same way. White: swipe the opposite way. A tiny swipe game.">
+  <title>FLIP</title>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; color: #f8f9fc; background: #111318; -webkit-text-size-adjust: 100%; }
+    * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+    html, body { width: 100%; height: 100%; margin: 0; overflow: hidden; overscroll-behavior: none; }
+    body { position: fixed; inset: 0; touch-action: none; -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; }
+    button { font: inherit; cursor: pointer; touch-action: manipulation; }
+    button:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    button:disabled { cursor: default; }
+    [hidden] { display: none !important; }
+    h1, h2, p { margin: 0; }
+    #viewport { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
+    #game { --unit: 2px; position: relative; width: 100vmin; height: 100vmin; max-width: 440px; max-height: 440px; overflow: hidden; isolation: isolate; border-radius: calc(var(--unit) * 9); background: #111318; }
+    .screen { position: absolute; inset: 0; text-align: center; }
+    .menu { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(var(--unit) * 6) calc(var(--unit) * 7); }
+    .brand { font-size: calc(var(--unit) * 23); font-weight: 900; line-height: .9; letter-spacing: -.08em; padding-right: .08em; }
+    .best-line { font-size: max(12px, calc(var(--unit) * 6)); color: #aeb4c1; font-weight: 550; line-height: 1.2; margin-top: calc(var(--unit) * 3); }
+    .best-line strong { color: #e5ff85; font-weight: 800; font-variant-numeric: tabular-nums; margin-left: .2em; }
+    .rules { width: 100%; display: flex; justify-content: center; gap: calc(var(--unit) * 3); }
+    .rule { display: flex; align-items: center; gap: calc(var(--unit) * 2); font-size: max(12px, calc(var(--unit) * 6)); font-weight: 650; line-height: 1.15; text-align: left; }
+    .rule svg { width: calc(var(--unit) * 12); height: calc(var(--unit) * 17); flex-shrink: 0; padding: calc(var(--unit) * 1.5); background: #7b87a4; border-radius: calc(var(--unit) * 3); }
+    .rule small { display: block; color: #aeb4c1; font-size: max(10px, calc(var(--unit) * 5)); font-weight: 500; margin-bottom: 2px; }
+    .cta { display: block; flex-shrink: 0; width: 100%; min-height: 44px; height: calc(var(--unit) * 23); border: 0; border-radius: calc(var(--unit) * 6); background: #e5ff85; color: #15191b; font-weight: 850; font-size: max(14px, calc(var(--unit) * 7)); letter-spacing: .055em; box-shadow: inset 0 -2px 0 #00000018; transition: transform 90ms, background 90ms; }
+    .cta:active { transform: scale(.96); background: #f1ffb6; }
+    .cta:disabled { opacity: .45; }
+    #countdown { display: flex; align-items: center; justify-content: center; }
+    #count { color: #e5ff85; font-size: calc(var(--unit) * 51); font-weight: 850; letter-spacing: -.08em; padding-right: .08em; line-height: 1; }
+    .count-pop { animation: count-pop 240ms cubic-bezier(.18,.8,.25,1) both; }
+    .count-caption { position: absolute; bottom: calc(var(--unit) * 14); left: 0; right: 0; font-size: max(12px, calc(var(--unit) * 6)); color: #aeb4c1; font-weight: 600; }
+    #arena { background: #7b87a4; color: #101216; touch-action: none; }
+    .hud { position: absolute; top: calc(var(--unit) * 6); left: calc(var(--unit) * 9); right: calc(var(--unit) * 9); display: flex; align-items: center; justify-content: space-between; font-size: max(12px, calc(var(--unit) * 5.8)); line-height: 1; font-weight: 750; letter-spacing: .07em; }
+    #score { font-size: calc(var(--unit) * 12); font-weight: 850; letter-spacing: -.06em; font-variant-numeric: tabular-nums; }
+    #rule-label { letter-spacing: .08em; }
+    .arrow-wrap { position: absolute; left: 22%; top: 23%; width: 56%; height: 56%; pointer-events: none; }
+    #arrow { display: block; width: 100%; height: 100%; overflow: visible; }
+    #arrow-shape { fill: #080a0d; stroke: #080a0d; stroke-width: 2.5; stroke-linejoin: round; }
+    #arena[data-tone="white"] #arrow-shape { fill: #fff; }
+    #arena[data-tone="white"] #rule-label { color: #fff; text-shadow: 0 1px 1px #10121655; }
+    .arrow-enter { animation: arrow-enter 120ms ease-out both; }
+    .timer { position: absolute; bottom: calc(var(--unit) * 8); left: calc(var(--unit) * 10); width: 80%; height: calc(var(--unit) * 4); min-height: 6px; border-radius: 20px; background: #11131838; overflow: hidden; }
+    #timer-fill { height: 100%; width: 100%; border-radius: inherit; background: #111318; transform-origin: left center; will-change: transform; }
+    #timer-warning { position: absolute; left: 0; right: 0; bottom: calc(var(--unit) * 15); font-size: max(11px, calc(var(--unit) * 5)); line-height: 1; font-weight: 850; letter-spacing: .14em; opacity: 0; }
+    #arena.urgent .timer { box-shadow: 0 0 0 2px #ffebe6; }
+    #arena.urgent #timer-fill { background: #9c1422; }
+    #arena.urgent #timer-warning { opacity: 1; }
+    #arena.urgent { box-shadow: inset 0 0 0 calc(var(--unit) * 2) #9c1422; }
+    #arena.correct { box-shadow: inset 0 0 0 calc(var(--unit) * 3) #e5ff85; }
+    #arena.correct .arrow-wrap { transform: scale(.88); transition: transform 90ms ease-out; }
+    #arena.correct #arrow-shape { fill: #e5ff85; }
+    #feedback { position: absolute; top: 40%; left: 40%; width: 20%; height: 20%; background: #e5ff85; color: #101216; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: calc(var(--unit) * 13); font-weight: 850; pointer-events: none; }
+    #failure { position: absolute; inset: 0; z-index: 2; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: calc(var(--unit) * 5); background: #b32635; color: #fff; }
+    #failure-icon { font-size: calc(var(--unit) * 31); line-height: .8; font-weight: 700; }
+    #failure-text { font-size: calc(var(--unit) * 10); font-weight: 800; letter-spacing: -.04em; }
+    #failure-detail { font-size: max(12px, calc(var(--unit) * 6)); font-weight: 550; }
+    .failure-pop { animation: failure-pop 180ms ease-out both; }
+    .result { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(var(--unit) * 6) calc(var(--unit) * 7); }
+    #result-title { font-size: max(13px, calc(var(--unit) * 7)); line-height: 1; font-weight: 750; color: #ff9da6; letter-spacing: -.015em; }
+    #result-title.record { color: #e5ff85; }
+    .score-block { width: 100%; }
+    #final-score { display: block; font-size: calc(var(--unit) * 31); font-weight: 850; line-height: .95; letter-spacing: -.065em; font-variant-numeric: tabular-nums; }
+    .score-caption { font-size: max(10px, calc(var(--unit) * 5)); color: #aeb4c1; letter-spacing: .1em; line-height: 1.1; margin-top: calc(var(--unit) * 2); }
+    #result-best-line { margin: 0; }
+    .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+    noscript { position: fixed; inset: 0; background: #111318; display: flex; align-items: center; padding: 20px; text-align: center; z-index: 10; }
+    @keyframes count-pop { from { transform: scale(.78); opacity: .35; } to { transform: scale(1); opacity: 1; } }
+    @keyframes arrow-enter { from { transform: scale(.83); opacity: .45; } to { transform: scale(1); opacity: 1; } }
+    @keyframes failure-pop { from { opacity: .3; } to { opacity: 1; } }
+    @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation: none !important; transition: none !important; } }
+  </style>
+</head>
+<body>
+  <div id="viewport">
+    <main id="game" aria-label="FLIP swipe game">
+      <section id="menu" class="screen menu" aria-label="Main menu">
+        <div><h1 class="brand">FLIP</h1><p class="best-line"><span class="best-label">BEST</span> <strong id="menu-best">0</strong></p></div>
+        <div class="rules" aria-label="Black: swipe the same direction. White: swipe the opposite direction.">
+          <div class="rule"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L90 48 H66 V92 H34 V48 H10 Z" fill="#080a0d" stroke="#080a0d" stroke-width="3" stroke-linejoin="round"/></svg><span><small>Black</small>Same</span></div>
+          <div class="rule"><svg viewBox="0 0 100 100" aria-hidden="true"><path d="M50 8 L90 48 H66 V92 H34 V48 H10 Z" fill="#fff" stroke="#080a0d" stroke-width="3" stroke-linejoin="round"/></svg><span><small>White</small>Opposite</span></div>
+        </div>
+        <button id="play" class="cta" type="button" disabled>PLAY</button>
+      </section>
+
+      <section id="countdown" class="screen" aria-label="Get ready" hidden>
+        <div id="count" aria-live="assertive" aria-atomic="true">3</div>
+        <p class="count-caption">Get ready to swipe</p>
+      </section>
+
+      <section id="arena" class="screen" aria-label="Swipe in response to the arrow" data-tone="black" hidden>
+        <div class="hud"><span id="score" aria-label="Score 0">0</span><span id="rule-label">SAME</span></div>
+        <div id="arrow-wrap" class="arrow-wrap">
+          <svg id="arrow" viewBox="0 0 100 100" role="img" aria-label="Black arrow up. Swipe up."><g id="arrow-direction"><path id="arrow-shape" d="M50 6 L92 48 H67 V94 H33 V48 H8 Z"/></g></svg>
+        </div>
+        <div id="timer-warning" aria-hidden="true">HURRY</div>
+        <div class="timer" role="progressbar" aria-label="Time remaining" aria-valuemin="0" aria-valuemax="100" aria-valuenow="100"><div id="timer-fill"></div></div>
+        <div id="feedback" aria-hidden="true" hidden>✓</div>
+        <div id="failure" hidden>
+          <span id="failure-icon" aria-hidden="true">×</span><strong id="failure-text">Wrong way</strong><span id="failure-detail">Swipe up</span>
+        </div>
+      </section>
+
+      <section id="result" class="screen result" aria-label="Game over" hidden>
+        <h2 id="result-title">Too slow</h2>
+        <div class="score-block"><strong id="final-score">0</strong><p class="score-caption">SCORE</p></div>
+        <p id="result-best-line" class="best-line"><span class="best-label">BEST</span> <strong id="result-best">0</strong></p>
+        <button id="again" class="cta" type="button">PLAY AGAIN</button>
+      </section>
+      <p id="announcement" class="sr-only" aria-live="polite" aria-atomic="true"></p>
+    </main>
+  </div>
+  <noscript>This game needs JavaScript. Open this link in the Watch’s web viewer.</noscript>
+  <script>
+  (function () {
+    'use strict';
+    // One file, no dependencies or network calls. Best scores belong to this browser.
+    var STORAGE_KEY = 'flip-watch-best-v1';
+    var LIMIT = 999999;
+    var $ = function (id) { return document.getElementById(id); };
+    var game = $('game'), viewport = $('viewport'), arena = $('arena');
+    var screens = [$('menu'), $('countdown'), arena, $('result')];
+    var timerFill = $('timer-fill'), timer = timerFill.parentNode;
+    var directions = ['up', 'right', 'down', 'left'];
+    var angles = [0, 90, 180, 270];
+    var state = 'menu', score = 0, best = 0, startingBest = 0, round = 0;
+    var tone = 'black', toneStreak = 0, expected = 0;
+    var duration = 2400, deadline = 0, phaseEnd = 0, countdownStart = 0;
+    var raf = null, alarm = null, gesture = null, lastMouseTouch = 0;
+    var storageMode = 'memory', lastCount = '', lastPercent = -1;
+    var now = function () { return window.performance && performance.now ? performance.now() : Date.now(); };
+    var requestFrame = window.requestAnimationFrame || function (fn) { return setTimeout(fn, 16); };
+    var cancelFrame = window.cancelAnimationFrame || clearTimeout;
+
+    function parseBest(value) {
+      if (typeof value !== 'string' || !/^\d{1,6}$/.test(value)) return 0;
+      return Math.min(LIMIT, parseInt(value, 10));
+    }
+    function cookieBest() {
+      var parts = document.cookie.split(';');
+      for (var i = 0; i < parts.length; i++) {
+        var item = parts[i].replace(/^\s+/, '');
+        if (item.indexOf(STORAGE_KEY + '=') === 0) return parseBest(item.slice(STORAGE_KEY.length + 1));
+      }
+      return 0;
+    }
+    function writeCookie(value) {
+      document.cookie = STORAGE_KEY + '=' + value + '; Max-Age=31536000; Path=/; SameSite=Lax' + (location.protocol === 'https:' ? '; Secure' : '');
+      return cookieBest() === value;
+    }
+    function loadBest() {
+      try { best = Math.max(best, parseBest(localStorage.getItem(STORAGE_KEY))); } catch (ignore) {}
+      try { best = Math.max(best, cookieBest()); } catch (ignore) {}
+      persistBest();
+    }
+    function persistBest() {
+      storageMode = 'memory';
+      try {
+        // Merge instead of overwriting a larger best from another open tab.
+        best = Math.max(best, parseBest(localStorage.getItem(STORAGE_KEY)));
+        localStorage.setItem(STORAGE_KEY, String(best));
+        if (localStorage.getItem(STORAGE_KEY) === String(best)) storageMode = 'local';
+      } catch (ignore) {}
+      if (storageMode === 'memory') {
+        try { if (writeCookie(best)) storageMode = 'cookie'; } catch (ignore) {}
+      }
+      updateBestLabels();
+    }
+    function updateBestLabels() {
+      $('menu-best').textContent = best;
+      $('result-best').textContent = best;
+      var labels = document.querySelectorAll('.best-label');
+      for (var i = 0; i < labels.length; i++) labels[i].textContent = storageMode === 'memory' ? 'VISIT BEST' : 'BEST';
+    }
+    function fit() {
+      // Size against the visible viewport as browser controls appear/disappear.
+      var visual = window.visualViewport;
+      var width = visual ? visual.width : window.innerWidth;
+      var height = visual ? visual.height : window.innerHeight;
+      viewport.style.width = width + 'px';
+      viewport.style.height = height + 'px';
+      var css = window.getComputedStyle(viewport);
+      width -= (parseFloat(css.paddingLeft) || 0) + (parseFloat(css.paddingRight) || 0);
+      height -= (parseFloat(css.paddingTop) || 0) + (parseFloat(css.paddingBottom) || 0);
+      var size = Math.max(1, Math.min(width, height, 440));
+      game.style.width = size + 'px';
+      game.style.height = size + 'px';
+      game.style.setProperty('--unit', size / 100 + 'px');
+    }
+    function show(screen) {
+      for (var i = 0; i < screens.length; i++) screens[i].hidden = screens[i] !== screen;
+    }
+    function announce(message) { $('announcement').textContent = message; }
+    function clearWork() {
+      if (raf !== null) cancelFrame.call(window, raf);
+      if (alarm !== null) clearTimeout(alarm);
+      raf = null;
+      alarm = null;
+      gesture = null;
+    }
+    function schedule() {
+      if (raf === null && (state === 'countdown' || state === 'playing' || state === 'correct' || state === 'failure')) {
+        raf = requestFrame.call(window, tick);
+      }
+    }
+    function restartAnimation(element, name) {
+      element.classList.remove(name);
+      void element.offsetWidth;
+      element.classList.add(name);
+    }
+    function startGame() {
+      if (state !== 'menu' && state !== 'result') return;
+      clearWork();
+      loadBest();
+      startingBest = best;
+      score = 0;
+      round = 0;
+      tone = 'black';
+      toneStreak = 0;
+      $('score').textContent = '0';
+      $('score').setAttribute('aria-label', 'Score 0');
+      arena.className = 'screen';
+      $('failure').hidden = true;
+      $('feedback').hidden = true;
+      state = 'countdown';
+      lastCount = '';
+      countdownStart = now();
+      show($('countdown'));
+      updateCountdown(countdownStart);
+      schedule();
+    }
+    function updateCountdown(time) {
+      var elapsed = time - countdownStart;
+      if (elapsed >= 1950) { nextArrow(); return; }
+      var text = elapsed < 550 ? '3' : elapsed < 1100 ? '2' : elapsed < 1650 ? '1' : 'GO';
+      if (text !== lastCount) {
+        lastCount = text;
+        $('count').textContent = text;
+        restartAnimation($('count'), 'count-pop');
+      }
+    }
+    function nextArrow() {
+      round++;
+      gesture = null;
+      var white;
+      if (score < 3) white = false;
+      else if (score === 3) white = true;
+      else {
+        white = Math.random() < Math.min(.60, .26 + (score - 3) * .008);
+        if (toneStreak >= 3) white = tone !== 'white';
+      }
+      var nextTone = white ? 'white' : 'black';
+      toneStreak = nextTone === tone ? toneStreak + 1 : 1;
+      tone = nextTone;
+      var direction = Math.floor(Math.random() * 4);
+      expected = white ? (direction + 2) % 4 : direction;
+      duration = Math.max(750, 2400 * Math.pow(.977, score));
+      arena.className = 'screen';
+      arena.setAttribute('data-tone', tone);
+      $('feedback').hidden = true;
+      $('failure').hidden = true;
+      $('rule-label').textContent = white ? 'OPPOSITE' : 'SAME';
+      $('arrow-direction').setAttribute('transform', 'rotate(' + angles[direction] + ' 50 50)');
+      $('arrow').setAttribute('aria-label', (white ? 'White' : 'Black') + ' arrow ' + directions[direction] + '. Swipe ' + directions[expected] + '.');
+      show(arena);
+      restartAnimation($('arrow-wrap'), 'arrow-enter');
+      state = 'playing';
+      deadline = now() + duration;
+      lastPercent = -1;
+      paintTimer(1);
+      armDeadline();
+      schedule();
+    }
+    function armDeadline() {
+      if (alarm !== null) clearTimeout(alarm);
+      alarm = setTimeout(function checkDeadline() {
+        alarm = null;
+        if (state !== 'playing') return;
+        if (now() >= deadline) finish('slow');
+        else armDeadline();
+      }, Math.max(1, Math.ceil(deadline - now())));
+    }
+    function paintTimer(fraction) {
+      fraction = Math.max(0, Math.min(1, fraction));
+      timerFill.style.transform = 'scaleX(' + fraction.toFixed(4) + ')';
+      var percent = Math.ceil(fraction * 100);
+      if (percent !== lastPercent) { timer.setAttribute('aria-valuenow', String(percent)); lastPercent = percent; }
+      // Last 30%, or last 350ms at high speed: colour + border + text warning.
+      arena.classList.toggle('urgent', fraction * duration <= Math.max(350, duration * .30));
+    }
+    function respond(direction) {
+      if (state !== 'playing') return;
+      if (now() >= deadline) { finish('slow'); return; }
+      gesture = null;
+      if (direction !== expected) { finish('wrong'); return; }
+      state = 'correct';
+      if (alarm !== null) clearTimeout(alarm);
+      alarm = null;
+      score = Math.min(LIMIT, score + 1);
+      $('score').textContent = score;
+      $('score').setAttribute('aria-label', 'Score ' + score);
+      if (score > best) { best = score; persistBest(); }
+      arena.classList.remove('urgent');
+      arena.classList.add('correct');
+      $('feedback').hidden = false;
+      phaseEnd = now() + 120;
+      schedule();
+    }
+    function finish(reason, immediate) {
+      if (state !== 'playing' && state !== 'correct') return;
+      clearWork();
+      state = 'failure';
+      arena.classList.remove('urgent', 'correct');
+      $('feedback').hidden = true;
+      if (reason === 'slow') paintTimer(0);
+      arena.classList.remove('urgent');
+      $('failure-icon').textContent = reason === 'wrong' ? '×' : '…';
+      $('failure-text').textContent = reason === 'wrong' ? 'Wrong way' : 'Too slow';
+      $('failure-detail').textContent = 'Swipe ' + directions[expected];
+      $('failure').hidden = false;
+      restartAnimation($('failure'), 'failure-pop');
+      if (score > best) best = score;
+      persistBest();
+      var record = score > startingBest && score >= best;
+      $('result-title').textContent = record ? 'New best!' : reason === 'wrong' ? 'Wrong way' : 'Too slow';
+      $('result-title').classList.toggle('record', record);
+      $('final-score').textContent = score;
+      $('final-score').style.fontSize = 'calc(var(--unit) * ' + (score >= 10000 ? 23 : 31) + ')';
+      announce((reason === 'wrong' ? 'Wrong way. ' : 'Too slow. ') + 'Score ' + score + '. ' + (record ? 'New best!' : 'Best ' + best + '.'));
+      phaseEnd = now() + 650;
+      if (immediate) showResult();
+      else schedule();
+    }
+    function showResult() {
+      state = 'result';
+      clearWork();
+      show($('result'));
+      $('again').focus({ preventScroll: true });
+    }
+    function tick() {
+      raf = null;
+      var time = now();
+      if (state === 'countdown') updateCountdown(time);
+      else if (state === 'playing') {
+        if (time >= deadline) finish('slow');
+        else paintTimer((deadline - time) / duration);
+      } else if (state === 'correct' && time >= phaseEnd) nextArrow();
+      else if (state === 'failure' && time >= phaseEnd) showResult();
+      schedule();
+    }
+    function beginGesture(x, y, id) {
+      if (state !== 'playing') return;
+      if (now() >= deadline) { finish('slow'); return; }
+      gesture = { x: x, y: y, id: id, round: round };
+    }
+    function moveGesture(x, y, id, ended) {
+      if (!gesture || gesture.id !== id || gesture.round !== round || state !== 'playing') return;
+      var dx = x - gesture.x, dy = y - gesture.y;
+      var ax = Math.abs(dx), ay = Math.abs(dy);
+      var threshold = Math.max(12, Math.min(28, game.clientWidth * .09));
+      // Resolve on movement, without waiting for finger-up. Ignore taps/ambiguous diagonals.
+      if (Math.max(ax, ay) >= threshold && Math.max(ax, ay) >= Math.min(ax, ay) * 1.2) {
+        respond(ax > ay ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
+      }
+      if (ended) gesture = null;
+    }
+    function prevent(event) { if (event.cancelable) event.preventDefault(); }
+    if (window.PointerEvent) {
+      arena.addEventListener('pointerdown', function (event) {
+        if (event.isPrimary === false || (event.pointerType === 'mouse' && event.button !== 0)) return;
+        prevent(event);
+        beginGesture(event.clientX, event.clientY, event.pointerId);
+        try { arena.setPointerCapture(event.pointerId); } catch (ignore) {}
+      });
+      arena.addEventListener('pointermove', function (event) { prevent(event); moveGesture(event.clientX, event.clientY, event.pointerId, false); });
+      arena.addEventListener('pointerup', function (event) { prevent(event); moveGesture(event.clientX, event.clientY, event.pointerId, true); });
+      arena.addEventListener('pointercancel', function () { gesture = null; });
+      arena.addEventListener('lostpointercapture', function () { gesture = null; });
+    } else {
+      // Older WebKit fallback: non-passive touch handlers stop page panning.
+      arena.addEventListener('touchstart', function (event) {
+        prevent(event);
+        lastMouseTouch = Date.now();
+        if (event.touches.length !== 1) { gesture = null; return; }
+        var t = event.touches[0];
+        beginGesture(t.clientX, t.clientY, t.identifier);
+      }, { passive: false });
+      arena.addEventListener('touchmove', function (event) {
+        prevent(event);
+        if (!gesture) return;
+        for (var i = 0; i < event.changedTouches.length; i++) {
+          var t = event.changedTouches[i];
+          moveGesture(t.clientX, t.clientY, t.identifier, false);
+        }
+      }, { passive: false });
+      arena.addEventListener('touchend', function (event) {
+        prevent(event);
+        for (var i = 0; i < event.changedTouches.length; i++) {
+          var t = event.changedTouches[i];
+          moveGesture(t.clientX, t.clientY, t.identifier, true);
+        }
+      }, { passive: false });
+      arena.addEventListener('touchcancel', function () { gesture = null; }, { passive: false });
+      arena.addEventListener('mousedown', function (event) {
+        if (event.button !== 0 || Date.now() - lastMouseTouch < 800) return;
+        prevent(event); beginGesture(event.clientX, event.clientY, 'mouse');
+      });
+      window.addEventListener('mousemove', function (event) { moveGesture(event.clientX, event.clientY, 'mouse', false); });
+      window.addEventListener('mouseup', function (event) { moveGesture(event.clientX, event.clientY, 'mouse', true); });
+    }
+    document.addEventListener('touchmove', prevent, { passive: false });
+    document.addEventListener('wheel', prevent, { passive: false });
+    document.addEventListener('contextmenu', prevent);
+    document.addEventListener('keydown', function (event) {
+      var keys = { ArrowUp: 0, ArrowRight: 1, ArrowDown: 2, ArrowLeft: 3 };
+      if (Object.prototype.hasOwnProperty.call(keys, event.key)) {
+        prevent(event);
+        if (!event.repeat) respond(keys[event.key]);
+      }
+    });
+    function leaveGame() {
+      if (state === 'playing' || state === 'correct') finish('slow', true);
+      else if (state === 'failure') showResult();
+      else if (state === 'countdown') { clearWork(); state = 'menu'; show($('menu')); }
+    }
+    document.addEventListener('visibilitychange', function () { if (document.hidden) leaveGame(); });
+    window.addEventListener('pagehide', leaveGame);
+    window.addEventListener('pageshow', fit);
+    window.addEventListener('resize', fit);
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', fit);
+    window.addEventListener('storage', function (event) {
+      if (event.key === STORAGE_KEY) { best = Math.max(best, parseBest(event.newValue)); updateBestLabels(); }
+    });
+    $('play').addEventListener('click', startGame);
+    $('again').addEventListener('click', startGame);
+    loadBest();
+    fit();
+    $('play').disabled = false;
+  }());
+  </script>
+</body>
+</html>
