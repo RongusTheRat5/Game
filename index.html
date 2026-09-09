@@ -1,0 +1,391 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="disabled-adaptations" content="watch">
+  <meta name="theme-color" content="#080b10">
+  <meta name="description" content="A small Apple Watch test for screen fit, colours, text, touch and animation.">
+  <title>Watch Test</title>
+  <style>
+    :root { color-scheme: dark; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif; font-size: 16px; background: #080b10; color: #f7f9fc; }
+    * { box-sizing: border-box; }
+    body { margin: 0; -webkit-text-size-adjust: 100%; }
+    [hidden] { display: none !important; }
+    button, select { font: inherit; }
+    button { min-height: 44px; border: 1px solid #445064; border-radius: 12px; padding: 9px 10px; background: #1a2332; color: #f7f9fc; cursor: pointer; touch-action: manipulation; -webkit-tap-highlight-color: transparent; }
+    button:active { background: #334762; }
+    button:focus-visible, select:focus-visible, a:focus-visible { outline: 3px solid #fff; outline-offset: 3px; }
+    button:disabled { opacity: .4; cursor: default; }
+    a { color: #81dcff; }
+    main { width: 100%; max-width: 420px; margin: 0 auto; padding: 8px; padding-left: max(8px, env(safe-area-inset-left)); padding-right: max(8px, env(safe-area-inset-right)); padding-bottom: max(12px, env(safe-area-inset-bottom)); }
+    header { display: flex; align-items: center; justify-content: space-between; gap: 6px; margin: 0 0 8px; }
+    header strong { font-size: 13px; letter-spacing: .02em; }
+    #js-status { color: #8bf7c0; font-size: 12px; text-align: right; }
+    .section-picker { width: 100%; min-height: 40px; margin-bottom: 12px; border: 1px solid #445064; border-radius: 10px; padding: 6px; background: #141c29; color: #fff; }
+    .js .panel { display: none; }
+    .js .panel.active { display: block; }
+    .panel { margin-bottom: 16px; }
+    h1, h2 { font-size: 22px; line-height: 1.15; margin: 0 0 8px; letter-spacing: -.03em; }
+    p { font-size: 16px; line-height: 1.4; margin: 8px 0 12px; overflow-wrap: break-word; }
+    .small { color: #abb8cc; font-size: 14px; }
+    .eyebrow { font-size: 12px; color: #79d7ff; letter-spacing: .1em; text-transform: uppercase; margin: 0 0 6px; }
+    .card { border: 1px solid #334155; background: #111925; border-radius: 14px; padding: 10px; margin: 10px 0; min-width: 0; }
+    .wide { width: 100%; }
+    .accent { background: #81dcff; color: #07121d; border-color: #81dcff; font-weight: 650; }
+    .accent:active { background: #c4efff; }
+    .readout { color: #8bf7c0; font-size: 14px; line-height: 1.4; overflow-wrap: anywhere; margin: 8px 0; }
+    .warning { color: #ffd16e; }
+    .row { display: flex; flex-wrap: wrap; gap: 6px; }
+    .row > button { flex: 1 1 55px; min-width: 0; }
+    .frame { height: 124px; border: 2px solid #81dcff; border-radius: 3px; position: relative; display: flex; align-items: center; justify-content: center; background: linear-gradient(90deg, #81dcff12 1px, transparent 1px), linear-gradient(#81dcff12 1px, transparent 1px); background-size: 16px 16px; }
+    .frame b { font-size: 30px; }
+    .corner { position: absolute; padding: 4px; font-size: 12px; line-height: 1; color: #bdeeff; }
+    .tl { top: 0; left: 0; } .tr { top: 0; right: 0; } .bl { bottom: 0; left: 0; } .br { bottom: 0; right: 0; }
+    .facts { margin: 10px 0; }
+    .fact { display: flex; flex-wrap: wrap; justify-content: space-between; gap: 2px 6px; padding: 7px 0; border-bottom: 1px solid #293547; font-size: 14px; }
+    .fact dt { color: #abb8cc; } .fact dd { margin: 0; font-variant-numeric: tabular-nums; overflow-wrap: anywhere; }
+    .swatches { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; }
+    .swatch { height: 64px; border: 0; color: #080b10; font-weight: 650; font-size: 14px; padding: 6px 2px; }
+    .gradient { height: 38px; border-radius: 8px; margin: 12px 0 6px; background: linear-gradient(to right, #000, #fff); border: 1px solid #778395; }
+    .light-sample { padding: 10px; border-radius: 10px; background: #fff; color: #080b10; font-size: 16px; margin-top: 8px; }
+    .sample { padding: 10px 0; border-bottom: 1px solid #334155; }
+    .sample span { display: block; font-size: 12px; color: #abb8cc; margin-bottom: 4px; }
+    .sample p { margin: 0; line-height: 1.35; }
+    .size12 { font-size: 12px; } .size14 { font-size: 14px; } .size16 { font-size: 16px; } .size18 { font-size: 18px; } .size22 { font-size: 22px; }
+    .grid { --columns: 5; display: grid; grid-template-columns: repeat(var(--columns), minmax(0, 1fr)); gap: 4px; margin: 10px 0; }
+    .tile { position: relative; min-height: 0; border-radius: 7px; padding: 0; width: 100%; height: 0; padding-bottom: 100%; border: 0; color: #080b10; font-weight: 700; font-size: 14px; }
+    .tile span { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); }
+    .tile[aria-pressed="true"] { box-shadow: inset 0 0 0 2px #fff, inset 0 0 0 4px #080b10; color: #fff; background: #263449 !important; }
+    .tile:active { filter: brightness(.8); }
+    .grid-controls { display: flex; gap: 6px; }
+    .grid-controls button { flex: 1; padding-left: 2px; padding-right: 2px; }
+    .grid-controls button[aria-pressed="true"] { background: #81dcff; color: #080b10; border-color: #81dcff; }
+    #motion-canvas { width: 100%; height: 110px; display: block; background: #111925; border: 1px solid #445064; border-radius: 12px; }
+    .track { height: 36px; margin: 10px 0; position: relative; border: 1px solid #334155; border-radius: 20px; background: #111925; }
+    .runner { width: 22px; height: 22px; position: absolute; top: 6px; left: 6px; border-radius: 50%; background: #ff91d6; }
+    .running .runner { animation: travel 1.5s ease-in-out infinite alternate; }
+    @keyframes travel { from { left: 6px; } to { left: calc(100% - 28px); } }
+    .checks { padding: 0; margin: 0; list-style: none; }
+    .checks li { display: flex; gap: 7px; padding: 8px 0; font-size: 14px; line-height: 1.35; border-bottom: 1px solid #334155; }
+    .checks li::before { content: "\25A1"; color: #81dcff; }
+    details { margin-top: 12px; }
+    summary { min-height: 44px; padding: 10px 0; font-size: 14px; color: #81dcff; cursor: pointer; }
+    pre { white-space: pre-wrap; overflow-wrap: anywhere; font-size: 12px; line-height: 1.5; color: #bfcee2; background: #111925; border: 1px solid #334155; padding: 8px; border-radius: 10px; }
+    nav { display: flex; gap: 8px; margin: 14px 0 8px; }
+    nav button { flex: 1; }
+    footer { text-align: center; color: #8696ac; font-size: 12px; padding: 6px 0; }
+    #edge-overlay { position: fixed; z-index: 10; inset: 0; top: 0; left: 0; right: 0; bottom: 0; background: #080b10; padding: 9px; }
+    .edge-inner { width: 100%; height: 100%; border: 3px solid #81dcff; display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; gap: 5px; padding: 5px; position: relative; }
+    .edge-inner p { font-size: 14px; margin: 0; }
+    .edge-inner button { max-width: 160px; width: 100%; }
+    .edge-mark { position: absolute; width: 9px; height: 9px; }
+    .edge-mark.tl { background: #ff6b80; } .edge-mark.tr { background: #ffd16e; } .edge-mark.bl { background: #7ae3ac; } .edge-mark.br { background: #81baff; }
+    noscript p { padding: 10px; border: 1px solid #ffcb6b; color: #ffcb6b; }
+    @media (max-width: 180px) { h1, h2 { font-size: 20px; } .grid { gap: 3px; } .tile { font-size: 12px; border-radius: 5px; } }
+  </style>
+</head>
+<body>
+  <main id="test-app">
+    <header><strong>WATCH TEST</strong><span id="js-status" role="status">JS waiting</span></header>
+    <noscript><p>JavaScript is off. Colours and text still work, but the touch and animation tests cannot run. Use normal web view, with Reader mode off.</p></noscript>
+    <label for="section-picker" class="small">Choose a test</label>
+    <select id="section-picker" class="section-picker" aria-label="Choose a test" disabled>
+      <option value="0">1 · Screen</option>
+      <option value="1">2 · Colours</option>
+      <option value="2">3 · Text</option>
+      <option value="3">4 · Touch</option>
+      <option value="4">5 · Motion</option>
+      <option value="5">6 · Results</option>
+    </select>
+
+    <section class="panel active" id="panel-fit" aria-labelledby="title-fit">
+      <p class="eyebrow">01 · Screen</p><h1 id="title-fit">Does it fit?</h1>
+      <div class="frame"><span class="corner tl">TL</span><span class="corner tr">TR</span><b>Hello!</b><span class="corner bl">BL</span><span class="corner br">BR</span></div>
+      <p>Can you see all four corners? Nothing should spill off the sides.</p>
+      <button class="wide accent" id="edge-open" disabled>Check edges</button>
+      <dl class="facts">
+        <div class="fact"><dt>View width</dt><dd id="view-width">—</dd></div>
+        <div class="fact"><dt>View height</dt><dd id="view-height">—</dd></div>
+        <div class="fact"><dt>Sideways overflow</dt><dd id="overflow">—</dd></div>
+      </dl>
+      <p class="small">These are webpage measurements, not the Watch model or physical screen size. Scroll down for Next.</p>
+    </section>
+
+    <section class="panel" id="panel-colours" aria-labelledby="title-colours">
+      <p class="eyebrow">02 · Colour</p><h2 id="title-colours">Six colours</h2>
+      <p class="small">Tap each block. Are they easy to tell apart?</p>
+      <div class="swatches">
+        <button class="swatch" style="background:#ff6b80" data-colour="Red">Red</button>
+        <button class="swatch" style="background:#ffd16e" data-colour="Yellow">Yellow</button>
+        <button class="swatch" style="background:#7ae3ac" data-colour="Green">Green</button>
+        <button class="swatch" style="background:#81baff" data-colour="Blue">Blue</button>
+        <button class="swatch" style="background:#be9cff" data-colour="Purple">Purple</button>
+        <button class="swatch" style="background:#ff91d6" data-colour="Pink">Pink</button>
+      </div>
+      <p class="readout" id="colour-status" role="status">No colour tapped yet.</p>
+      <div class="gradient" role="img" aria-label="Black to white gradient"></div>
+      <p class="small">Black → grey → white</p>
+      <div class="light-sample">Dark text on white.</div>
+      <p>Light text on black.</p>
+    </section>
+
+    <section class="panel" id="panel-text" aria-labelledby="title-text">
+      <p class="eyebrow">03 · Type</p><h2 id="title-text">Read this</h2>
+      <p class="small">Which size is comfortable without zooming?</p>
+      <div class="sample"><span>12 px · Small label</span><p class="size12">Score 1,250 · Moves 12</p></div>
+      <div class="sample"><span>14 px · Label</span><p class="size14">Score 1,250 · Moves 12</p></div>
+      <div class="sample"><span>16 px · Normal text</span><p class="size16">Match three to score.</p></div>
+      <div class="sample"><span>18 px · Larger text</span><p class="size18">Match three to score.</p></div>
+      <div class="sample"><span>22 px · Heading</span><p class="size22">Level complete!</p></div>
+      <div class="card"><p>This sentence should wrap neatly, with every word visible.</p><p>Symbols: ♥ ★ ● ◆</p></div>
+      <p class="small">Scrolling down this page should work with your finger or Digital Crown.</p>
+    </section>
+
+    <section class="panel" id="panel-touch" aria-labelledby="title-touch">
+      <p class="eyebrow">04 · Controls</p><h2 id="title-touch">Tap the tiles</h2>
+      <div class="grid-controls" aria-label="Grid size">
+        <button data-grid="4" aria-pressed="false">4×4</button>
+        <button data-grid="5" aria-pressed="true">5×5</button>
+        <button data-grid="6" aria-pressed="false">6×6</button>
+      </div>
+      <div id="touch-grid" class="grid" aria-label="Touch test tiles"></div>
+      <p class="readout" id="touch-status" role="status">Tap each tile once.</p>
+      <p class="small" id="tile-size">Tile size: —</p>
+      <button class="wide" id="touch-reset" disabled>Reset taps</button>
+      <p class="small">Try all four corners. Do you hit the tile you meant to? A smaller grid gives bigger targets.</p>
+    </section>
+
+    <section class="panel" id="panel-motion" aria-labelledby="title-motion">
+      <p class="eyebrow">05 · Motion</p><h2 id="title-motion">Does it move?</h2>
+      <canvas id="motion-canvas" width="300" height="110" aria-label="Canvas test: three coloured shapes move after pressing Start">Canvas is unavailable.</canvas>
+      <div class="track" id="motion-track" role="img" aria-label="CSS animation test: a pink dot moves left and right"><div class="runner"></div></div>
+      <p class="readout" id="motion-status" role="status">Stopped. Tap Start.</p>
+      <div class="row"><button class="accent" id="motion-start" disabled>Start</button><button id="motion-stop" disabled>Stop</button></div>
+      <p class="small">Top: drawn shapes. Bottom: a moving dot. Watch for freezes or jerky movement. The frame count measures this page, not the display's refresh rate.</p>
+      <p class="small" id="reduced-motion"></p>
+    </section>
+
+    <section class="panel" id="panel-results" aria-labelledby="title-results">
+      <p class="eyebrow">06 · Findings</p><h2 id="title-results">What to report</h2>
+      <ul class="checks">
+        <li>All edges visible, with no sideways scrolling?</li>
+        <li>All six colours distinguishable?</li>
+        <li>Smallest comfortable text size?</li>
+        <li>Best grid: 4×4, 5×5 or 6×6?</li>
+        <li>Do taps select the right tiles?</li>
+        <li>Do both animations move smoothly?</li>
+      </ul>
+      <p class="small">A photo of each screen is useful. Try opening the link through Messages and through your launcher shortcut.</p>
+      <details open><summary>Page measurements</summary><pre id="report">JavaScript has not run.</pre></details>
+      <p class="small">No information is uploaded. This page uses no external files. Measurements do not prove it will run a complete game.</p>
+      <p class="small">If the colours or controls are missing, switch from Reader view to normal web view. A blank page means we need to check the Watch's browser before making the game.</p>
+    </section>
+
+    <nav id="test-nav" aria-label="Test navigation" hidden><button id="previous">Back</button><button class="accent" id="next">Next</button></nav>
+    <footer>Watch Test · v1.0</footer>
+  </main>
+
+  <div id="edge-overlay" role="dialog" aria-modal="true" aria-label="Check the webpage edges" hidden>
+    <div class="edge-inner">
+      <i class="edge-mark tl"></i><i class="edge-mark tr"></i><i class="edge-mark bl"></i><i class="edge-mark br"></i>
+      <p>All four borders<br>and coloured corners?</p>
+      <button id="edge-close" class="accent">Close</button>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    'use strict';
+    var byId = function (id) { return document.getElementById(id); };
+    var panels = document.querySelectorAll('.panel');
+    var picker = byId('section-picker');
+    var current = 0, gridSize = 5, taps = 0, uniqueTaps = 0;
+    var colourNames = ['Red', 'Yellow', 'Green', 'Blue', 'Purple', 'Pink'];
+    var colours = ['#ff6b80', '#ffd16e', '#7ae3ac', '#81baff', '#be9cff', '#ff91d6'];
+    var running = false, frameId = null, frames = 0, frameStart = 0, elapsed = 0, lastRate = 'Not measured';
+    var canvas = byId('motion-canvas'), context = null, lastError = 'None';
+    var storageStatus = 'Unavailable', cssAnimation = 'animation' in document.documentElement.style;
+    var raf = window.requestAnimationFrame || function (fn) { return window.setTimeout(function () { fn(Date.now()); }, 33); };
+    var caf = window.cancelAnimationFrame || window.clearTimeout;
+    var reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+    window.addEventListener('error', function (event) {
+      lastError = event.message || 'Script error';
+      byId('js-status').textContent = 'JS error';
+      byId('js-status').className = 'warning';
+      if (current === 5) updateMeasurements();
+    });
+    try { context = canvas.getContext('2d'); } catch (error) { lastError = 'Canvas unavailable'; }
+    try {
+      var probeKey = '__watch_test_' + Date.now();
+      window.localStorage.setItem(probeKey, 'ok');
+      storageStatus = window.localStorage.getItem(probeKey) === 'ok' ? 'Available (now)' : 'Read failed';
+      window.localStorage.removeItem(probeKey);
+    } catch (error) { storageStatus = 'Blocked or unavailable'; }
+
+    function setText(id, value) { byId(id).textContent = value; }
+    function updateMeasurements() {
+      var width = document.documentElement.clientWidth;
+      var height = window.innerHeight || document.documentElement.clientHeight;
+      var actualWidth = Math.max(document.documentElement.scrollWidth, document.body.scrollWidth);
+      var overflow = Math.max(0, Math.round(actualWidth - width));
+      var tile = byId('touch-grid').querySelector('button');
+      var tileWidth = tile && tile.getBoundingClientRect().width;
+      setText('view-width', width + ' CSS px');
+      setText('view-height', height + ' CSS px');
+      setText('overflow', overflow > 1 ? overflow + ' px — check' : 'None');
+      byId('overflow').className = overflow > 1 ? 'warning' : '';
+      if (tileWidth) setText('tile-size', 'Each tile: ' + Math.round(tileWidth) + ' × ' + Math.round(tile.getBoundingClientRect().height) + ' CSS px');
+      var visual = window.visualViewport;
+      setText('report', [
+        'Watch Test v1.0',
+        'Layout: ' + width + ' × ' + height + ' CSS px',
+        'Visual view: ' + (visual ? Math.round(visual.width) + ' × ' + Math.round(visual.height) + ' CSS px' : 'Not reported'),
+        'View scale: ' + (visual ? visual.scale.toFixed(2) : 'Not reported'),
+        'Pixel ratio: ' + (window.devicePixelRatio || 1),
+        'Reported screen: ' + window.screen.width + ' × ' + window.screen.height,
+        'Horizontal overflow (this page): ' + overflow + ' px',
+        'JavaScript: running',
+        'Canvas 2D: ' + (context ? 'Available' : 'Unavailable'),
+        'CSS animation: ' + (cssAnimation ? 'Available' : 'Unavailable'),
+        'Animation callback rate: ' + lastRate,
+        'Storage: ' + storageStatus,
+        'Storage result does not guarantee saved progress survives closing the viewer.',
+        'Touch points reported: ' + (navigator.maxTouchPoints || 0),
+        'Grid: ' + gridSize + ' × ' + gridSize,
+        'Taps: ' + taps + '; tiles reached: ' + uniqueTaps,
+        'Reduced motion: ' + (reduced ? 'On' : 'Off'),
+        'Last script error: ' + lastError,
+        'Browser: ' + navigator.userAgent
+      ].join('\n'));
+    }
+
+    function draw(time) {
+      if (!context) return;
+      var width = canvas.getBoundingClientRect().width || 140;
+      var height = 110;
+      var ratio = Math.min(window.devicePixelRatio || 1, 3);
+      if (canvas.width !== Math.round(width * ratio) || canvas.height !== Math.round(height * ratio)) {
+        canvas.width = Math.round(width * ratio); canvas.height = Math.round(height * ratio);
+      }
+      context.setTransform(ratio, 0, 0, ratio, 0, 0);
+      context.clearRect(0, 0, width, height);
+      for (var i = 0; i < 3; i++) {
+        var x = width * (i + 1) / 4;
+        var y = 55 + Math.sin(time / 450 + i * 1.4) * 27;
+        context.fillStyle = colours[i * 2];
+        context.beginPath();
+        if (i === 0) context.arc(x, y, 10, 0, Math.PI * 2);
+        if (i === 1) { context.moveTo(x, y - 12); context.lineTo(x + 11, y + 9); context.lineTo(x - 11, y + 9); context.closePath(); }
+        if (i === 2) context.rect(x - 9, y - 9, 18, 18);
+        context.fill();
+      }
+    }
+
+    function tick(timestamp) {
+      if (!running) return;
+      if (!frameStart) frameStart = timestamp;
+      frames++; elapsed = timestamp;
+      draw(timestamp);
+      var duration = timestamp - frameStart;
+      if (duration >= 1000) {
+        lastRate = Math.round(frames * 1000 / duration) + ' callbacks/sec';
+        setText('motion-status', (context ? 'Running · ' : 'Canvas unavailable · ') + lastRate);
+        frames = 0; frameStart = timestamp;
+      }
+      frameId = raf(tick);
+    }
+
+    function stopMotion() {
+      running = false;
+      if (frameId !== null) caf(frameId);
+      frameId = null;
+      byId('motion-track').classList.remove('running');
+      byId('motion-start').disabled = false;
+      byId('motion-stop').disabled = true;
+      setText('motion-status', context ? 'Stopped. Tap Start.' : 'Canvas unavailable. Try the dot.');
+    }
+
+    function startMotion() {
+      if (running) return;
+      running = true; frames = 0; frameStart = 0;
+      byId('motion-track').classList.add('running');
+      byId('motion-start').disabled = true;
+      byId('motion-stop').disabled = false;
+      setText('motion-status', 'Running…');
+      frameId = raf(tick);
+    }
+
+    function makeGrid(size) {
+      gridSize = size; taps = 0; uniqueTaps = 0;
+      var grid = byId('touch-grid');
+      grid.innerHTML = '';
+      grid.style.setProperty('--columns', String(size));
+      for (var i = 0; i < size * size; i++) {
+        var tile = document.createElement('button');
+        var label = document.createElement('span');
+        tile.type = 'button'; tile.className = 'tile';
+        tile.style.backgroundColor = colours[i % colours.length];
+        tile.setAttribute('aria-label', 'Tile ' + (i + 1) + ', ' + colourNames[i % colours.length]);
+        tile.setAttribute('aria-pressed', 'false');
+        tile.setAttribute('data-tile', String(i + 1));
+        label.textContent = String(i + 1); tile.appendChild(label); grid.appendChild(tile);
+      }
+      var controls = document.querySelectorAll('[data-grid]');
+      for (var n = 0; n < controls.length; n++) controls[n].setAttribute('aria-pressed', String(Number(controls[n].getAttribute('data-grid')) === size));
+      setText('touch-status', '0 / ' + size * size + ' tiles reached.');
+      updateMeasurements();
+    }
+
+    function showPanel(index) {
+      if (index < 0 || index >= panels.length) return;
+      stopMotion(); current = index;
+      for (var i = 0; i < panels.length; i++) panels[i].classList.toggle('active', i === index);
+      picker.value = String(index);
+      byId('previous').disabled = index === 0;
+      byId('next').textContent = index === panels.length - 1 ? 'Again' : 'Next';
+      window.scrollTo(0, 0);
+      updateMeasurements();
+      if (index === 4) draw(elapsed);
+    }
+
+    picker.addEventListener('change', function () { showPanel(Number(picker.value)); });
+    byId('previous').addEventListener('click', function () { showPanel(current - 1); });
+    byId('next').addEventListener('click', function () { showPanel((current + 1) % panels.length); });
+    byId('edge-open').addEventListener('click', function () { byId('edge-overlay').hidden = false; byId('test-app').setAttribute('aria-hidden', 'true'); byId('edge-close').focus(); });
+    function closeEdges() { byId('edge-overlay').hidden = true; byId('test-app').removeAttribute('aria-hidden'); byId('edge-open').focus(); }
+    byId('edge-close').addEventListener('click', closeEdges);
+    byId('edge-overlay').addEventListener('keydown', function (event) { if (event.key === 'Escape') closeEdges(); if (event.key === 'Tab') { event.preventDefault(); byId('edge-close').focus(); } });
+    var swatches = document.querySelectorAll('[data-colour]');
+    for (var s = 0; s < swatches.length; s++) swatches[s].addEventListener('click', function () { setText('colour-status', this.getAttribute('data-colour') + ' tapped ✓'); });
+    var choices = document.querySelectorAll('[data-grid]');
+    for (var c = 0; c < choices.length; c++) choices[c].addEventListener('click', function () { makeGrid(Number(this.getAttribute('data-grid'))); });
+    byId('touch-grid').addEventListener('click', function (event) {
+      var tile = event.target;
+      while (tile && tile !== this && !tile.hasAttribute('data-tile')) tile = tile.parentNode;
+      if (!tile || tile === this) return;
+      taps++;
+      if (tile.getAttribute('aria-pressed') === 'false') { uniqueTaps++; tile.setAttribute('aria-pressed', 'true'); }
+      setText('touch-status', 'Tile ' + tile.getAttribute('data-tile') + ' · ' + uniqueTaps + ' / ' + gridSize * gridSize + ' reached · ' + taps + ' taps');
+    });
+    byId('touch-reset').addEventListener('click', function () { makeGrid(gridSize); });
+    byId('motion-start').addEventListener('click', startMotion);
+    byId('motion-stop').addEventListener('click', stopMotion);
+    document.addEventListener('visibilitychange', function () { if (document.hidden) stopMotion(); });
+    window.addEventListener('pagehide', stopMotion);
+    window.addEventListener('resize', function () { updateMeasurements(); if (current === 4 && !running) draw(elapsed); });
+    if (window.visualViewport) window.visualViewport.addEventListener('resize', updateMeasurements);
+    setText('reduced-motion', reduced ? 'Reduced Motion is on. Start deliberately runs this motion test; Stop ends it.' : 'Animation starts only when you tap Start, and stops when you leave this test.');
+    makeGrid(5);
+    document.documentElement.classList.add('js');
+    picker.disabled = false;
+    byId('edge-open').disabled = false;
+    byId('touch-reset').disabled = false;
+    byId('test-nav').hidden = false;
+    showPanel(0);
+    setText('js-status', 'JS OK');
+  }());
+  </script>
+</body>
+</html>
