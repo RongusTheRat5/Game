@@ -18,7 +18,7 @@
     [hidden] { display: none !important; }
     h1, h2, p { margin: 0; }
     #viewport { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; padding: 0; padding: env(safe-area-inset-top) env(safe-area-inset-right) env(safe-area-inset-bottom) env(safe-area-inset-left); }
-    #game { --unit: 2px; position: relative; width: 100vmin; height: 100vmin; max-width: 440px; max-height: 440px; overflow: hidden; isolation: isolate; border-radius: calc(var(--unit) * 9); background: #111318; }
+    #game { --unit: 2px; position: relative; flex-shrink: 0; width: 100vmin; height: 100vmin; max-width: 440px; max-height: 440px; overflow: hidden; isolation: isolate; transform-origin: center; border-radius: calc(var(--unit) * 9); background: #111318; }
     .screen { position: absolute; inset: 0; text-align: center; }
     .menu { display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: calc(var(--unit) * 6) calc(var(--unit) * 7); }
     .brand { font-size: calc(var(--unit) * 23); font-weight: 900; line-height: .9; letter-spacing: -.08em; padding-right: .08em; }
@@ -178,19 +178,31 @@
       for (var i = 0; i < labels.length; i++) labels[i].textContent = storageMode === 'memory' ? 'VISIT BEST' : 'BEST';
     }
     function fit() {
-      // Size against the visible viewport as browser controls appear/disappear.
+      // Shortcuts overlays its close control without always reporting a safe inset.
+      // Keep the top fifth clear, with a little breathing room above/below the game.
       var visual = window.visualViewport;
       var width = visual ? visual.width : window.innerWidth;
       var height = visual ? visual.height : window.innerHeight;
       viewport.style.width = width + 'px';
       viewport.style.height = height + 'px';
+      // Clear our previous override before reading the device's native safe area.
+      viewport.style.paddingTop = '';
+      viewport.style.paddingBottom = '';
       var css = window.getComputedStyle(viewport);
+      var top = Math.max(parseFloat(css.paddingTop) || 0, height * .20) + 4;
+      var bottom = Math.max(parseFloat(css.paddingBottom) || 0, 4);
       width -= (parseFloat(css.paddingLeft) || 0) + (parseFloat(css.paddingRight) || 0);
-      height -= (parseFloat(css.paddingTop) || 0) + (parseFloat(css.paddingBottom) || 0);
+      height -= top + bottom;
+      viewport.style.paddingTop = top + 'px';
+      viewport.style.paddingBottom = bottom + 'px';
       var size = Math.max(1, Math.min(width, height, 440));
-      game.style.width = size + 'px';
-      game.style.height = size + 'px';
-      game.style.setProperty('--unit', size / 100 + 'px');
+      // Scale the complete layout below its 156px design minimum so labels and
+      // buttons keep their proportions instead of colliding at smaller sizes.
+      var layoutSize = Math.max(156, size);
+      game.style.width = layoutSize + 'px';
+      game.style.height = layoutSize + 'px';
+      game.style.setProperty('--unit', layoutSize / 100 + 'px');
+      game.style.transform = 'scale(' + size / layoutSize + ')';
     }
     function show(screen) {
       for (var i = 0; i < screens.length; i++) screens[i].hidden = screens[i] !== screen;
@@ -362,7 +374,7 @@
       if (!gesture || gesture.id !== id || gesture.round !== round || state !== 'playing') return;
       var dx = x - gesture.x, dy = y - gesture.y;
       var ax = Math.abs(dx), ay = Math.abs(dy);
-      var threshold = Math.max(12, Math.min(28, game.clientWidth * .09));
+      var threshold = Math.max(12, Math.min(28, game.getBoundingClientRect().width * .09));
       // Resolve on movement, without waiting for finger-up. Ignore taps/ambiguous diagonals.
       if (Math.max(ax, ay) >= threshold && Math.max(ax, ay) >= Math.min(ax, ay) * 1.2) {
         respond(ax > ay ? (dx > 0 ? 1 : 3) : (dy > 0 ? 2 : 0));
